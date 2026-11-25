@@ -3,234 +3,818 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>CareerX — Skill &amp; Job Readiness Dashboard</title>
+  <title>CareerX — AI Employability &amp; Skill Intelligence Platform</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
   <style>
+    :root {
+      --bg: #f5f7fa;
+      --surface: #ffffff;
+      --surface-alt: #f8fafc;
+      --border: #e2e8f0;
+      --text: #0f172a;
+      --muted: #64748b;
+      --primary: #0f766e;
+      --primary-hover: #0d9488;
+      --primary-soft: #f0fdfa;
+      --accent: #0284c7;
+      --danger-bg: #fef2f2;
+      --danger-text: #b91c1c;
+      --danger-border: #fecaca;
+    }
+    body.dark {
+      --bg: #0b0f19;
+      --surface: #111827;
+      --surface-alt: #1e293b;
+      --border: #334155;
+      --text: #f1f5f9;
+      --muted: #94a3b8;
+      --primary: #14b8a6;
+      --primary-hover: #2dd4bf;
+      --primary-soft: rgba(20, 184, 166, 0.12);
+      --accent: #38bdf8;
+      --danger-bg: rgba(239, 68, 68, 0.14);
+      --danger-text: #fca5a5;
+      --danger-border: rgba(239, 68, 68, 0.35);
+    }
     * { box-sizing: border-box; margin: 0; padding: 0; font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif; }
-    body {
-      background: linear-gradient(135deg, #f4f7fb 0%, #eef2f6 100%);
-      color: #1e293b;
-      min-height: 100vh;
-      padding: 32px 20px;
+    body { background: var(--bg); color: var(--text); min-height: 100vh; transition: background 0.2s, color 0.2s; }
+
+    .layout { display: grid; grid-template-columns: 250px 1fr; min-height: 100vh; }
+    @media (max-width: 860px) { .layout { grid-template-columns: 1fr; } }
+
+    .sidebar {
+      background: var(--surface);
+      border-right: 1px solid var(--border);
+      padding: 22px 16px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
     }
-    .container { max-width: 980px; margin: 0 auto; }
-    .header {
-      display: flex; justify-content: space-between; align-items: center;
-      flex-wrap: wrap; gap: 12px; margin-bottom: 26px;
-      background: #ffffff;
-      padding: 18px 24px;
-      border-radius: 16px;
-      border: 1px solid #e2e8f0;
-      box-shadow: 0 4px 16px rgba(15, 23, 42, 0.04);
+    .brand-row { display: flex; align-items: center; justify-content: space-between; margin-bottom: 22px; padding: 0 8px; }
+    .brand { font-size: 22px; font-weight: 800; color: var(--primary); letter-spacing: -0.5px; }
+    .nav-btn {
+      width: 100%; text-align: left; background: transparent; border: none;
+      color: var(--muted); padding: 10px 12px; border-radius: 10px;
+      font-size: 14px; font-weight: 600; cursor: pointer; margin-bottom: 4px;
+      transition: background 0.15s, color 0.15s;
     }
-    .brand { font-size: 26px; font-weight: 800; color: #0f766e; letter-spacing: -0.5px; }
-    .sub { color: #64748b; font-size: 14px; }
-    .status-pill {
-      background: #ecfdf5;
-      color: #047857;
-      border: 1px solid #a7f3d0;
-      padding: 6px 12px;
-      border-radius: 999px;
-      font-size: 12px;
-      font-weight: 600;
+    .nav-btn:hover, .nav-btn.active { background: var(--primary-soft); color: var(--primary); }
+
+    .main { padding: 24px 28px; max-width: 1180px; width: 100%; margin: 0 auto; }
+    .topbar {
+      display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap;
+      gap: 12px; background: var(--surface); border: 1px solid var(--border);
+      padding: 14px 20px; border-radius: 14px; margin-bottom: 22px;
+    }
+    .pill {
+      display: inline-flex; align-items: center; gap: 6px; padding: 5px 12px;
+      border-radius: 999px; font-size: 12px; font-weight: 600;
+      background: var(--primary-soft); color: var(--primary); border: 1px solid var(--border);
     }
 
-    .grid { display: grid; grid-template-columns: 1fr 1.45fr; gap: 22px; }
-    @media (max-width: 780px) { .grid { grid-template-columns: 1fr; } }
+    .grid-2 { display: grid; grid-template-columns: 1fr 1.35fr; gap: 20px; }
+    .grid-3 { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 16px; }
+    @media (max-width: 860px) { .grid-2 { grid-template-columns: 1fr; } }
 
     .card {
-      background: #ffffff;
-      border: 1px solid #e2e8f0;
-      border-radius: 18px;
-      padding: 24px;
-      box-shadow: 0 6px 24px rgba(15, 23, 42, 0.04);
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: 16px; padding: 20px; margin-bottom: 18px;
+      box-shadow: 0 4px 18px rgba(15, 23, 42, 0.03);
     }
-    .card h2 { font-size: 17px; font-weight: 700; margin-bottom: 16px; color: #0f172a; }
+    .card h2 { font-size: 17px; font-weight: 700; margin-bottom: 14px; }
+    .card h3 { font-size: 15px; font-weight: 700; margin-bottom: 8px; }
+    .sub { color: var(--muted); font-size: 13.5px; line-height: 1.5; }
 
-    label { display: block; font-size: 13px; font-weight: 600; color: #475569; margin-bottom: 6px; }
-    select, input[type="number"] {
-      width: 100%; padding: 10px 12px; border-radius: 10px;
-      border: 1px solid #cbd5e1; background: #f8fafc; color: #0f172a;
-      font-size: 14px; font-weight: 500; margin-bottom: 12px;
-      transition: border-color 0.2s, background 0.2s;
+    label { display: block; font-size: 12.5px; font-weight: 600; color: var(--muted); margin-bottom: 5px; }
+    input, select, textarea {
+      width: 100%; padding: 9px 12px; border-radius: 9px;
+      border: 1px solid var(--border); background: var(--surface-alt); color: var(--text);
+      font-size: 14px; margin-bottom: 11px;
     }
-    select:focus, input[type="number"]:focus {
-      outline: none;
-      border-color: #0d9488;
-      background: #ffffff;
+    .btn {
+      padding: 10px 16px; border: none; border-radius: 9px;
+      background: var(--primary); color: #ffffff; font-weight: 600; font-size: 14px;
+      cursor: pointer; transition: opacity 0.15s;
     }
-    .skill-row {
-      display: grid; grid-template-columns: 1fr 90px; gap: 10px; align-items: center;
-      margin-bottom: 10px;
+    .btn:hover { opacity: 0.92; }
+    .btn-outline {
+      background: transparent; border: 1px solid var(--border); color: var(--text);
     }
-    .skill-row label { margin: 0; font-weight: 500; color: #334155; }
-    .skill-row input { margin: 0; text-align: center; }
+    .btn-sm { padding: 6px 11px; font-size: 12.5px; }
 
-    button {
-      width: 100%; margin-top: 16px; padding: 12px;
-      border: none; border-radius: 10px;
-      background: linear-gradient(90deg, #0f766e, #0d9488);
-      color: #ffffff; font-weight: 600; font-size: 15px;
-      cursor: pointer;
-      box-shadow: 0 4px 12px rgba(13, 148, 136, 0.22);
-      transition: transform 0.15s, opacity 0.2s;
-    }
-    button:hover { opacity: 0.94; transform: translateY(-1px); }
+    .skill-row { display: grid; grid-template-columns: 1fr 84px; gap: 10px; align-items: center; margin-bottom: 8px; }
+    .skill-row label, .skill-row input { margin: 0; }
 
-    .score-box {
-      display: flex; align-items: center; justify-content: space-between;
-      background: #f0fdfa; border-radius: 14px; padding: 18px 20px; margin-bottom: 18px;
-      border: 1px solid #ccfbf1;
+    .score-banner {
+      display: flex; justify-content: space-between; align-items: center;
+      background: var(--primary-soft); border: 1px solid var(--border);
+      border-radius: 12px; padding: 16px 18px; margin-bottom: 16px;
     }
-    .score-num { font-size: 36px; font-weight: 800; color: #0f766e; }
+    .score-big { font-size: 34px; font-weight: 800; color: var(--primary); }
 
-    .bar-wrap { margin-bottom: 15px; }
-    .bar-top { display: flex; justify-content: space-between; font-size: 13px; color: #334155; margin-bottom: 6px; gap: 8px; flex-wrap: wrap; }
-    .track { width: 100%; height: 10px; background: #e2e8f0; border-radius: 999px; overflow: hidden; }
-    .fill { height: 100%; background: linear-gradient(90deg, #14b8a6, #0284c7); border-radius: 999px; transition: width 0.35s ease; }
+    .bar-wrap { margin-bottom: 12px; }
+    .bar-top { display: flex; justify-content: space-between; font-size: 13px; margin-bottom: 4px; }
+    .track { width: 100%; height: 9px; background: var(--border); border-radius: 999px; overflow: hidden; }
+    .fill { height: 100%; background: linear-gradient(90deg, var(--primary), var(--accent)); border-radius: 999px; }
 
     .badge {
-      display: inline-block; padding: 5px 11px; border-radius: 999px;
-      font-size: 12px; font-weight: 600; margin-right: 6px; margin-top: 6px;
-      background: #fef2f2; color: #b91c1c; border: 1px solid #fecaca;
+      display: inline-block; padding: 4px 10px; border-radius: 999px;
+      font-size: 12px; font-weight: 600; margin: 4px 6px 0 0;
+      background: var(--danger-bg); color: var(--danger-text); border: 1px solid var(--danger-border);
     }
-    .project-box {
-      margin-top: 16px; padding: 14px 16px; border-radius: 12px;
-      background: #f0f9ff; border: 1px solid #bae6fd;
-      color: #0369a1; font-size: 14px; line-height: 1.5;
+    .badge-ok { background: var(--primary-soft); color: var(--primary); border-color: var(--border); }
+
+    .view { display: none; }
+    .view.active { display: block; }
+
+    .modal-backdrop {
+      position: fixed; inset: 0; background: rgba(15, 23, 42, 0.55);
+      display: none; align-items: center; justify-content: center; padding: 16px; z-index: 50;
     }
+    .modal-backdrop.open { display: flex; }
+    .modal {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: 16px; max-width: 440px; width: 100%; padding: 24px;
+    }
+    table { width: 100%; border-collapse: collapse; font-size: 13px; }
+    th, td { padding: 10px; border-bottom: 1px solid var(--border); text-align: left; }
   </style>
 </head>
 <body>
-  <div class="container">
-    <div class="header">
+  <div class="layout">
+    <aside class="sidebar">
       <div>
-        <div class="brand">CareerX</div>
-        <div class="sub">AI-Powered Employability &amp; Skill Intelligence Dashboard</div>
-      </div>
-      <div class="status-pill" id="apiStatusText">Connecting...</div>
-    </div>
-
-    <div class="grid">
-      <div class="card">
-        <h2>1. Apna Target &amp; Skill Score Daalo</h2>
-        <label for="roleSelect">Target Role</label>
-        <select id="roleSelect" onchange="renderSkillInputs()">
-          <option value="Data Analyst">Data Analyst</option>
-          <option value="AI/ML Engineer">AI/ML Engineer</option>
-        </select>
-
-        <div id="skillInputs"></div>
-
-        <button onclick="analyzeSkills()">Analyze Skill Gap</button>
+        <div class="brand-row">
+          <span class="brand">CareerX</span>
+          <button class="btn btn-outline btn-sm" onclick="toggleTheme()" title="Toggle Light/Dark">Theme</button>
+        </div>
+        <button class="nav-btn active" onclick="switchView('xray', this)">1. Career X-Ray Dashboard</button>
+        <button class="nav-btn" onclick="switchView('assess', this)">2. Skill Assessment</button>
+        <button class="nav-btn" onclick="switchView('learn', this)">3. AI Learning &amp; Projects</button>
+        <button class="nav-btn" onclick="switchView('experience', this)">4. Career Experience Labs</button>
+        <button class="nav-btn" onclick="switchView('roles', this)">5. Job Role Intelligence</button>
+        <button class="nav-btn" onclick="switchView('mentor', this)">6. AI Career Mentor</button>
+        <button class="nav-btn" onclick="switchView('profile', this)">7. Student Profile &amp; Growth</button>
+        <button class="nav-btn" id="adminNavBtn" style="display:none;" onclick="switchView('admin', this)">8. Admin Analytics</button>
       </div>
 
-      <div class="card">
-        <h2>2. Career X-Ray Report</h2>
+      <div style="padding-top:16px; border-top:1px solid var(--border);">
+        <div class="sub" style="margin-bottom:8px;">Cycle: <b>ASSESS → LEARN → EXPERIENCE → IMPROVE</b></div>
+        <button class="btn btn-outline" style="width:100%;" id="authActionBtn" onclick="openAuthModal()">Student Login / Register</button>
+      </div>
+    </aside>
 
-        <div class="score-box">
-          <div>
-            <div class="sub" style="color:#0f766e; font-weight:600;">Job Readiness Score</div>
-            <div id="roleTitle" style="font-weight:700; font-size:18px; color:#0f172a; margin-top:3px;">Data Analyst</div>
+    <main class="main">
+      <div class="topbar">
+        <div>
+          <div style="font-weight:700; font-size:16px;" id="welcomeBanner">Welcome, Guest Explorer</div>
+          <div class="sub">AI-Powered Employability &amp; Skill Intelligence Platform</div>
+        </div>
+        <div style="display:flex; gap:8px; align-items:center; flex-wrap:wrap;">
+          <span class="pill" id="apiStatusPill">● Connecting to Render...</span>
+        </div>
+      </div>
+
+      <!-- VIEW 1: CAREER X-RAY DASHBOARD -->
+      <section id="view-xray" class="view active">
+        <div class="grid-2">
+          <div class="card">
+            <h2>Target Role &amp; Skill Input</h2>
+            <label for="roleSelect">Target Job Role</label>
+            <select id="roleSelect" onchange="onRoleChange()"></select>
+            <div id="skillInputs"></div>
+            <div style="display:flex; gap:10px; margin-top:12px;">
+              <button class="btn" style="flex:1;" onclick="runSkillAnalysis(false)">Analyze Skill Gap</button>
+              <button class="btn btn-outline" style="flex:1;" onclick="runSkillAnalysis(true)">AI Deep Report</button>
+            </div>
           </div>
-          <div class="score-num" id="readinessScore">--/100</div>
-        </div>
 
-        <div id="barsContainer">
-          <div class="sub">"Analyze Skill Gap" dabao — yahan tumhara skill breakdown dikhega.</div>
-        </div>
+          <div class="card">
+            <h2>Career X-Ray Report</h2>
+            <div class="score-banner">
+              <div>
+                <div class="sub">Job Readiness Score</div>
+                <div id="xrayRoleTitle" style="font-weight:800; font-size:18px;">Data Analyst</div>
+              </div>
+              <div class="score-big" id="readinessScore">--/100</div>
+            </div>
 
-        <div style="margin-top: 16px;">
-          <div class="sub" style="font-weight:600; color:#475569;">Top Skill Gaps (Priority):</div>
-          <div id="gapsContainer"></div>
-        </div>
+            <div style="max-height:240px; margin-bottom:16px;">
+              <canvas id="skillsChart"></canvas>
+            </div>
 
-        <div class="project-box" id="projectBox" style="display:none;"></div>
+            <div id="barsContainer"></div>
+
+            <div style="margin-top:12px;">
+              <div class="sub" style="font-weight:600;">Priority Skill Gaps:</div>
+              <div id="gapsContainer"></div>
+            </div>
+
+            <div id="aiInsightsBox" class="card" style="margin-top:14px; background:var(--primary-soft); display:none;"></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- VIEW 2: SKILL ASSESSMENT -->
+      <section id="view-assess" class="view">
+        <div class="card">
+          <h2>AI Career Skill Assessment</h2>
+          <p class="sub" style="margin-bottom:14px;">Measure real job readiness across MCQs, coding logic, and practical workplace scenarios. Your verified score automatically updates your Career X-Ray profile.</p>
+          <div style="display:flex; gap:10px; flex-wrap:wrap; margin-bottom:16px;">
+            <select id="assessRoleSelect" style="max-width:280px; margin:0;"></select>
+            <button class="btn" onclick="loadAssessment()">Start / Retake Assessment</button>
+          </div>
+          <div id="assessmentContainer"></div>
+          <div id="assessmentResultBox" style="margin-top:16px;"></div>
+        </div>
+      </section>
+
+      <!-- VIEW 3: LEARNING ROADMAP & PROJECTS -->
+      <section id="view-learn" class="view">
+        <div class="card">
+          <h2>Personalized Learning Resources</h2>
+          <p class="sub" style="margin-bottom:14px;">Mark topics complete to track progress and boost your demonstrated skill readiness (+5% per verified topic when logged in).</p>
+          <div class="grid-3" id="learningGrid"></div>
+        </div>
+        <div class="card">
+          <h2>Recommended Hands-On Portfolio Projects</h2>
+          <div class="grid-3" id="projectsGrid"></div>
+        </div>
+      </section>
+
+      <!-- VIEW 4: CAREER EXPERIENCE (TRY BEFORE YOU CHOOSE) -->
+      <section id="view-experience" class="view">
+        <div class="card">
+          <h2>Career Experience — Try Before You Choose</h2>
+          <p class="sub" style="margin-bottom:14px;">Analyze realistic company-style datasets and submit workplace deliverables before choosing your career path.</p>
+          <div id="experienceGrid"></div>
+        </div>
+      </section>
+
+      <!-- VIEW 5: JOB ROLE INTELLIGENCE -->
+      <section id="view-roles" class="view">
+        <div class="card">
+          <h2>Job Role Intelligence Database (9 Industry Tracks)</h2>
+          <div class="grid-3" id="rolesIntelligenceGrid"></div>
+        </div>
+      </section>
+
+      <!-- VIEW 6: AI CAREER MENTOR -->
+      <section id="view-mentor" class="view">
+        <div class="card">
+          <h2>CareerX AI Career Mentor</h2>
+          <p class="sub" style="margin-bottom:12px;">Ask about skill roadmaps, interview prep, project ideas, or how to close your current gaps.</p>
+          <div id="chatLog" style="min-height:180px; max-height:340px; overflow-y:auto; padding:12px; border:1px solid var(--border); border-radius:10px; background:var(--surface-alt); margin-bottom:12px;">
+            <div class="sub">CareerX AI Mentor ready. Login and ask your career question below.</div>
+          </div>
+          <div style="display:flex; gap:10px;">
+            <input type="text" id="chatInput" placeholder="e.g., How do I raise my SQL & Power BI readiness in 3 weeks?" style="margin:0;" />
+            <button class="btn" onclick="sendChat()">Ask AI</button>
+          </div>
+        </div>
+      </section>
+
+      <!-- VIEW 7: STUDENT PROFILE & GROWTH -->
+      <section id="view-profile" class="view">
+        <div class="grid-2">
+          <div class="card">
+            <h2>Student Academic &amp; Career Profile</h2>
+            <label>Full Name</label>
+            <input type="text" id="profName" />
+            <label>College / University</label>
+            <input type="text" id="profCollege" placeholder="e.g., Teerthanker Mahaveer University" />
+            <div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:8px;">
+              <div><label>Degree</label><input type="text" id="profDegree" placeholder="BCA" /></div>
+              <div><label>Semester</label><input type="text" id="profSem" placeholder="3rd" /></div>
+              <div><label>CGPA</label><input type="number" step="0.1" id="profCgpa" placeholder="8.5" /></div>
+            </div>
+            <label>Career Interests</label>
+            <input type="text" id="profInterests" placeholder="AI/ML, Data Analytics, Backend Systems" />
+            <button class="btn" onclick="saveProfile()">Save Profile</button>
+          </div>
+
+          <div class="card">
+            <h2>Continuous Improvement History</h2>
+            <p class="sub" style="margin-bottom:12px;">Tracks your readiness score progression across assessments and AI analyses.</p>
+            <div style="max-height:220px; margin-bottom:12px;">
+              <canvas id="historyChart"></canvas>
+            </div>
+            <div id="historyList" class="sub">Login to persist and compare reassessment history.</div>
+          </div>
+        </div>
+      </section>
+
+      <!-- VIEW 8: ADMIN DASHBOARD -->
+      <section id="view-admin" class="view">
+        <div class="card">
+          <h2>Platform Admin Analytics</h2>
+          <div class="grid-3" id="adminMetrics" style="margin-bottom:16px;"></div>
+          <h3>Registered Users</h3>
+          <div style="overflow-x:auto;">
+            <table>
+              <thead><tr><th>ID</th><th>Name</th><th>Email</th><th>Role</th><th>Status</th></tr></thead>
+              <tbody id="adminUsersTable"></tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <!-- AUTH MODAL -->
+  <div class="modal-backdrop" id="authModal">
+    <div class="modal">
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:14px;">
+        <h2 id="authTitle">Student Login</h2>
+        <button class="btn btn-outline btn-sm" onclick="closeAuthModal()">✕</button>
       </div>
+      <div id="registerFields" style="display:none;">
+        <label>Full Name</label>
+        <input type="text" id="authName" placeholder="Vishesh Srivastava" />
+        <label>College</label>
+        <input type="text" id="authCollege" placeholder="Teerthanker Mahaveer University" />
+      </div>
+      <label>Email</label>
+      <input type="email" id="authEmail" placeholder="student@careerx.ai" />
+      <label>Password</label>
+      <input type="password" id="authPassword" placeholder="Minimum 6 characters" />
+      <button class="btn" style="width:100%; margin-bottom:10px;" onclick="submitAuth()">Continue</button>
+      <button class="btn btn-outline" style="width:100%;" onclick="toggleAuthMode()" id="authSwitchBtn">New student? Create Account</button>
+      <div class="sub" style="margin-top:10px; font-size:12px;">Admin demo login: <code>admin@careerx.ai</code> / <code>Admin@123</code></div>
     </div>
   </div>
 
   <script>
-    const RENDER_BACKEND_URL = "https://careerx-backend-b406.onrender.com";
+    const API_BASE = "https://careerx-backend-b406.onrender.com";
+    let authToken = localStorage.getItem("careerx_token") || "";
+    let currentUser = null;
+    let isRegisterMode = false;
+    let rolesData = [];
+    let currentDemonstrated = { "Excel": 94, "Python": 81, "Stats": 67, "SQL": 48, "Power BI": 31 };
+    let lastGapReport = null;
+    let skillsChartInstance = null;
+    let historyChartInstance = null;
 
-    const API_BASE = RENDER_BACKEND_URL.trim().replace(/\/+$/, "");
-    document.getElementById("apiStatusText").innerText = "● API: Live on Render";
+    function toggleTheme() {
+      document.body.classList.toggle("dark");
+    }
 
-    const ROLE_SKILLS = {
-      "Data Analyst": { "Excel": 94, "Python": 81, "Stats": 67, "SQL": 48, "Power BI": 31 },
-      "AI/ML Engineer": { "Python": 80, "SQL": 65, "Machine Learning": 60, "Deep Learning": 45, "LLM / NLP": 50 }
-    };
+    function switchView(name, btn) {
+      document.querySelectorAll(".view").forEach(v => v.classList.remove("active"));
+      document.querySelectorAll(".nav-btn").forEach(b => b.classList.remove("active"));
+      document.getElementById(`view-${name}`).classList.add("active");
+      if (btn) btn.classList.add("active");
+
+      if (name === "learn") loadLearningAndProjects();
+      if (name === "experience") loadExperienceModules();
+      if (name === "profile" && authToken) loadProfile();
+      if (name === "admin" && authToken) loadAdminAnalytics();
+    }
+
+    function openAuthModal() {
+      if (authToken) {
+        localStorage.removeItem("careerx_token");
+        authToken = "";
+        currentUser = null;
+        document.getElementById("welcomeBanner").innerText = "Welcome, Guest Explorer";
+        document.getElementById("authActionBtn").innerText = "Student Login / Register";
+        document.getElementById("adminNavBtn").style.display = "none";
+        return;
+      }
+      document.getElementById("authModal").classList.add("open");
+    }
+
+    function closeAuthModal() {
+      document.getElementById("authModal").classList.remove("open");
+    }
+
+    function toggleAuthMode() {
+      isRegisterMode = !isRegisterMode;
+      document.getElementById("authTitle").innerText = isRegisterMode ? "Create Student Account" : "Student Login";
+      document.getElementById("registerFields").style.display = isRegisterMode ? "block" : "none";
+      document.getElementById("authSwitchBtn").innerText = isRegisterMode ? "Already registered? Login" : "New student? Create Account";
+    }
+
+    async function submitAuth() {
+      const email = document.getElementById("authEmail").value.trim();
+      const password = document.getElementById("authPassword").value;
+      const endpoint = isRegisterMode ? "/auth/register" : "/auth/login";
+      const payload = isRegisterMode
+        ? {
+            full_name: document.getElementById("authName").value.trim() || "Student",
+            email,
+            password,
+            college: document.getElementById("authCollege").value.trim(),
+            target_role: document.getElementById("roleSelect").value || "Data Analyst"
+          }
+        : { email, password };
+
+      try {
+        const res = await fetch(`${API_BASE}${endpoint}`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload)
+        });
+        const data = await res.json();
+        if (!res.ok) return alert(data.detail || "Authentication failed");
+
+        authToken = data.token;
+        localStorage.setItem("careerx_token", authToken);
+        closeAuthModal();
+        await loadProfile();
+      } catch (e) {
+        alert("Unable to reach server. Wait 20s for Render backend to wake up.");
+      }
+    }
+
+    async function loadProfile() {
+      if (!authToken) return;
+      const res = await fetch(`${API_BASE}/profile/me`, {
+        headers: { Authorization: `Bearer ${authToken}` }
+      });
+      if (!res.ok) {
+        authToken = "";
+        localStorage.removeItem("careerx_token");
+        return;
+      }
+      const data = await res.json();
+      currentUser = data.user;
+      document.getElementById("welcomeBanner").innerText = `Welcome, ${currentUser.full_name} (${data.profile.target_role})`;
+      document.getElementById("authActionBtn").innerText = "Logout";
+      if (currentUser.role === "admin") {
+        document.getElementById("adminNavBtn").style.display = "block";
+      }
+
+      document.getElementById("profName").value = currentUser.full_name || "";
+      document.getElementById("profCollege").value = data.profile.college || "";
+      document.getElementById("profDegree").value = data.profile.degree || "";
+      document.getElementById("profSem").value = data.profile.semester || "";
+      document.getElementById("profCgpa").value = data.profile.cgpa || "";
+      document.getElementById("profInterests").value = data.profile.career_interests || "";
+
+      if (data.profile.target_role) {
+        document.getElementById("roleSelect").value = data.profile.target_role;
+        document.getElementById("assessRoleSelect").value = data.profile.target_role;
+      }
+      if (data.profile.demonstrated_skills && Object.keys(data.profile.demonstrated_skills).length) {
+        currentDemonstrated = data.profile.demonstrated_skills;
+      }
+      renderSkillInputs();
+      renderHistory(data.history || []);
+    }
+
+    async function saveProfile() {
+      if (!authToken) return alert("Please login first to save your profile.");
+      const res = await fetch(`${API_BASE}/profile/me`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${authToken}` },
+        body: JSON.stringify({
+          full_name: document.getElementById("profName").value,
+          college: document.getElementById("profCollege").value,
+          degree: document.getElementById("profDegree").value,
+          semester: document.getElementById("profSem").value,
+          cgpa: Number(document.getElementById("profCgpa").value || 0),
+          career_interests: document.getElementById("profInterests").value,
+          target_role: document.getElementById("roleSelect").value
+        })
+      });
+      if (res.ok) {
+        alert("Profile saved!");
+        loadProfile();
+      }
+    }
+
+    async function initApp() {
+      try {
+        const res = await fetch(`${API_BASE}/roles`);
+        const data = await res.json();
+        document.getElementById("apiStatusPill").innerText = "● API: Live on Render";
+        rolesData = data.details || [];
+
+        const roleSel = document.getElementById("roleSelect");
+        const assessSel = document.getElementById("assessRoleSelect");
+        const titles = data.roles || ["Data Analyst", "AI/ML Engineer"];
+        roleSel.innerHTML = titles.map(t => `<option value="${t}">${t}</option>`).join("");
+        assessSel.innerHTML = titles.map(t => `<option value="${t}">${t}</option>`).join("");
+
+        renderRolesIntelligence();
+        renderSkillInputs();
+        if (authToken) await loadProfile();
+        await runSkillAnalysis(false);
+      } catch (e) {
+        document.getElementById("apiStatusPill").innerText = "● Waking Render Backend...";
+      }
+    }
+
+    function onRoleChange() {
+      renderSkillInputs();
+      runSkillAnalysis(false);
+    }
 
     function renderSkillInputs() {
       const role = document.getElementById("roleSelect").value;
-      const skills = ROLE_SKILLS[role];
+      const roleObj = rolesData.find(r => r.title === role);
+      const reqSkills = roleObj ? roleObj.required_skills : { "Excel": 85, "Python": 75, "Stats": 70, "SQL": 90, "Power BI": 80 };
       const container = document.getElementById("skillInputs");
       container.innerHTML = "";
 
-      for (const [skill, defaultVal] of Object.entries(skills)) {
+      Object.keys(reqSkills).forEach(skill => {
+        const val = currentDemonstrated[skill] !== undefined ? currentDemonstrated[skill] : 60;
         container.innerHTML += `
           <div class="skill-row">
-            <label for="skill_${skill}">${skill} (0–100)</label>
-            <input type="number" id="skill_${skill}" min="0" max="100" value="${defaultVal}" />
-          </div>
-        `;
-      }
-    }
-
-    async function analyzeSkills() {
-      const role = document.getElementById("roleSelect").value;
-      const skills = ROLE_SKILLS[role];
-      const demonstrated = {};
-
-      for (const skill of Object.keys(skills)) {
-        const val = Number(document.getElementById(`skill_${skill}`).value || 0);
-        demonstrated[skill] = Math.max(0, Math.min(100, val));
-      }
-
-      try {
-        const res = await fetch(`${API_BASE}/analyze`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ target_role: role, demonstrated_skills: demonstrated })
-        });
-        const data = await res.json();
-        renderReport(data);
-      } catch (err) {
-        alert("Render backend abhi wake up ho raha hai ya connect nahi ho pa raha. 20-30 sec baad dobara dabao.");
-      }
-    }
-
-    function renderReport(data) {
-      document.getElementById("roleTitle").innerText = data.target_role;
-      document.getElementById("readinessScore").innerText = `${data.job_readiness_score}/100`;
-
-      const bars = document.getElementById("barsContainer");
-      bars.innerHTML = "";
-      data.skills.forEach(item => {
-        bars.innerHTML += `
-          <div class="bar-wrap">
-            <div class="bar-top">
-              <span><b>${item.skill}</b> — Tumhara: ${item.demonstrated}% | Required: ${item.required}%</span>
-              <span>Gap: ${item.gap}% (${item.status})</span>
-            </div>
-            <div class="track">
-              <div class="fill" style="width: ${item.demonstrated}%;"></div>
-            </div>
+            <label>${skill} (0–100)</label>
+            <input type="number" id="inp_${skill}" min="0" max="100" value="${val}" />
           </div>
         `;
       });
-
-      const gaps = document.getElementById("gapsContainer");
-      gaps.innerHTML = data.top_skills_gap.length
-        ? data.top_skills_gap.map(g => `<span class="badge">${g.skill}: -${g.gap}% (${g.status})</span>`).join("")
-        : `<span class="sub">Koi major gap nahi hai!</span>`;
-
-      const proj = document.getElementById("projectBox");
-      proj.style.display = "block";
-      proj.innerHTML = `<b>Recommended Project:</b> ${data.recommended_project}`;
     }
 
-    renderSkillInputs();
-    analyzeSkills();
+    async function runSkillAnalysis(useAI) {
+      if (useAI && !authToken) {
+        openAuthModal();
+        return alert("Login first to generate and save your AI Deep Skill Gap Report.");
+      }
+      const role = document.getElementById("roleSelect").value;
+      const roleObj = rolesData.find(r => r.title === role);
+      const reqSkills = roleObj ? roleObj.required_skills : { "Excel": 85, "Python": 75, "Stats": 70, "SQL": 90, "Power BI": 80 };
+      const skillsPayload = {};
+
+      Object.keys(reqSkills).forEach(skill => {
+        const el = document.getElementById(`inp_${skill}`);
+        skillsPayload[skill] = el ? Math.max(0, Math.min(100, Number(el.value || 0))) : 60;
+      });
+      currentDemonstrated = { ...currentDemonstrated, ...skillsPayload };
+
+      const endpoint = useAI ? "/analyze/ai" : "/analyze";
+      const headers = { "Content-Type": "application/json" };
+      if (authToken) headers.Authorization = `Bearer ${authToken}`;
+
+      const res = await fetch(`${API_BASE}${endpoint}`, {
+        method: "POST",
+        headers,
+        body: JSON.stringify({ target_role: role, demonstrated_skills: skillsPayload })
+      });
+      const report = await res.json();
+      if (!res.ok) return alert(report.detail || "Analysis error");
+
+      lastGapReport = report;
+      document.getElementById("xrayRoleTitle").innerText = report.target_role;
+      document.getElementById("readinessScore").innerText = `${report.job_readiness_score}/100`;
+
+      const bars = document.getElementById("barsContainer");
+      bars.innerHTML = report.skills.map(s => `
+        <div class="bar-wrap">
+          <div class="bar-top">
+            <span><b>${s.skill}</b> — You: ${s.demonstrated}% | Req: ${s.required}%</span>
+            <span>Gap: ${s.gap}% (${s.status})</span>
+          </div>
+          <div class="track"><div class="fill" style="width:${s.demonstrated}%;"></div></div>
+        </div>
+      `).join("");
+
+      const gaps = document.getElementById("gapsContainer");
+      gaps.innerHTML = report.top_skills_gap.length
+        ? report.top_skills_gap.map(g => `<span class="badge">${g.skill}: -${g.gap}%</span>`).join("")
+        : `<span class="badge badge-ok">All benchmark skills met!</span>`;
+
+      renderChart(report.skills);
+
+      const aiBox = document.getElementById("aiInsightsBox");
+      if (report.ai_insights) {
+        aiBox.style.display = "block";
+        aiBox.innerHTML = `
+          <h3>AI Skill Gap &amp; 4-Week Roadmap</h3>
+          <p class="sub" style="margin-bottom:8px;">${report.ai_insights.executive_summary}</p>
+          ${(report.ai_insights.weekly_roadmap || []).map(w => `<div class="sub"><b>Week ${w.week} (${w.focus}):</b> ${w.target_deliverable}</div>`).join("")}
+        `;
+      } else {
+        aiBox.style.display = "none";
+      }
+    }
+
+    function renderChart(skills) {
+      const ctx = document.getElementById("skillsChart");
+      if (skillsChartInstance) skillsChartInstance.destroy();
+      skillsChartInstance = new Chart(ctx, {
+        type: "bar",
+        data: {
+          labels: skills.map(s => s.skill),
+          datasets: [
+            { label: "Demonstrated %", data: skills.map(s => s.demonstrated), backgroundColor: "#0d9488", borderRadius: 6 },
+            { label: "Required %", data: skills.map(s => s.required), backgroundColor: "#94a3b8", borderRadius: 6 }
+          ]
+        },
+        options: { responsive: true, maintainAspectRatio: false, scales: { y: { beginAtZero: true, max: 100 } } }
+      });
+    }
+
+    async function loadAssessment() {
+      const role = document.getElementById("assessRoleSelect").value;
+      const res = await fetch(`${API_BASE}/assessments/${encodeURIComponent(role)}`);
+      const data = await res.json();
+      const box = document.getElementById("assessmentContainer");
+      box.innerHTML = `<h3>${data.title} (${data.role_title})</h3>` + data.questions.map((q, idx) => `
+        <div class="card" style="margin-top:10px; background:var(--surface-alt);">
+          <div style="font-weight:600; margin-bottom:8px;">Q${idx + 1} [${q.skill_name} · ${q.question_type.toUpperCase()}]: ${q.prompt}</div>
+          ${q.options.map(opt => `
+            <label style="font-weight:400; color:var(--text); cursor:pointer;">
+              <input type="radio" name="q_${q.id}" value="${opt}" style="width:auto; margin-right:8px;" /> ${opt}
+            </label>
+          `).join("")}
+        </div>
+      `).join("") + `<button class="btn" onclick="submitAssessment('${data.role_title}', [${data.questions.map(q => q.id).join(",")}])">Submit Assessment</button>`;
+    }
+
+    async function submitAssessment(roleTitle, qIds) {
+      if (!authToken) {
+        openAuthModal();
+        return alert("Please login to save your assessment results and update readiness.");
+      }
+      const answers = {};
+      qIds.forEach(id => {
+        const checked = document.querySelector(`input[name="q_${id}"]:checked`);
+        if (checked) answers[id] = checked.value;
+      });
+
+      const res = await fetch(`${API_BASE}/assessments/submit`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${authToken}` },
+        body: JSON.stringify({ role_title: roleTitle, answers })
+      });
+      const data = await res.json();
+      if (!res.ok) return alert(data.detail || "Submission error");
+
+      document.getElementById("assessmentResultBox").innerHTML = `
+        <div class="card" style="background:var(--primary-soft);">
+          <h3>Assessment Score: ${data.assessment_score}% (${data.correct_count}/${data.total_questions})</h3>
+          <p class="sub">Updated Job Readiness for ${roleTitle}: <b>${data.updated_readiness.job_readiness_score}/100</b></p>
+          ${data.review.map(r => `<div class="sub" style="margin-top:6px;"><b>${r.skill_name}:</b> ${r.is_correct ? "✓ Correct" : `✗ Your: ${r.your_answer || "None"} | Correct: ${r.correct_answer}`} — ${r.explanation}</div>`).join("")}
+        </div>
+      `;
+      await loadProfile();
+    }
+
+    async function loadLearningAndProjects() {
+      const [resL, resP] = await Promise.all([
+        fetch(`${API_BASE}/learning/resources`),
+        fetch(`${API_BASE}/projects?role_title=${encodeURIComponent(document.getElementById("roleSelect").value)}`)
+      ]);
+      const resources = await resL.json();
+      const projects = await resP.json();
+
+      document.getElementById("learningGrid").innerHTML = resources.map(r => `
+        <div class="card" style="margin:0; background:var(--surface-alt);">
+          <span class="badge badge-ok">${r.skill_name} · ${r.estimated_hours}h</span>
+          <h3 style="margin-top:8px;">${r.title}</h3>
+          <p class="sub">${r.provider} (${r.resource_type})</p>
+          <div style="margin-top:10px; display:flex; gap:8px;">
+            <a href="${r.url}" target="_blank" class="btn btn-outline btn-sm" style="text-decoration:none;">Open</a>
+            <button class="btn btn-sm" onclick="markTopicComplete('${r.skill_name}', '${r.title.replace(/'/g, "")}')">Mark Complete</button>
+          </div>
+        </div>
+      `).join("");
+
+      document.getElementById("projectsGrid").innerHTML = projects.map(p => `
+        <div class="card" style="margin:0; background:var(--surface-alt);">
+          <span class="badge badge-ok">${p.difficulty}</span>
+          <h3 style="margin-top:8px;">${p.title}</h3>
+          <p class="sub">${p.description}</p>
+          <p class="sub" style="margin-top:6px;"><b>Tech:</b> ${p.technologies.join(", ")}</p>
+          <p class="sub"><b>Outcome:</b> ${p.expected_outcome}</p>
+          <button class="btn btn-sm" style="margin-top:10px;" onclick="submitProjectDemo(${p.id})">Submit Project Link</button>
+        </div>
+      `).join("");
+    }
+
+    async function markTopicComplete(skill, topic) {
+      if (!authToken) return openAuthModal();
+      const res = await fetch(`${API_BASE}/learning/progress`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${authToken}` },
+        body: JSON.stringify({ skill_name: skill, topic, completed: true })
+      });
+      if (res.ok) {
+        alert(`Completed "${topic}"! +5% skill boost applied to ${skill}.`);
+        loadProfile();
+      }
+    }
+
+    async function submitProjectDemo(projectId) {
+      if (!authToken) return openAuthModal();
+      const url = prompt("Enter your GitHub repository or live demo URL:");
+      if (!url) return;
+      const res = await fetch(`${API_BASE}/projects/submit`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${authToken}` },
+        body: JSON.stringify({ project_id: projectId, repo_or_demo_url: url, notes: "Submitted via CareerX Dashboard" })
+      });
+      if (res.ok) alert("Project submitted successfully!");
+    }
+
+    async function loadExperienceModules() {
+      const res = await fetch(`${API_BASE}/experience/modules`);
+      const modules = await res.json();
+      document.getElementById("experienceGrid").innerHTML = modules.map(m => `
+        <div class="card" style="background:var(--surface-alt);">
+          <span class="badge">${m.simulation_badge}</span>
+          <h3 style="margin-top:8px;">${m.title} (${m.role_title})</h3>
+          <p class="sub" style="margin-bottom:10px;">${m.scenario}</p>
+          <pre style="background:var(--surface); padding:10px; border-radius:8px; border:1px solid var(--border); overflow-x:auto; font-size:12px; margin-bottom:10px;">${JSON.stringify(m.sample_dataset, null, 2)}</pre>
+          <ul style="padding-left:18px; margin-bottom:10px;" class="sub">
+            ${m.tasks.map(t => `<li>${t}</li>`).join("")}
+          </ul>
+          <label>${m.deliverable_prompt}</label>
+          <textarea id="exp_resp_${m.id}" rows="3" placeholder="Write your data analysis & recommendations..."></textarea>
+          <button class="btn btn-sm" onclick="submitExperience(${m.id})">Submit Deliverable</button>
+        </div>
+      `).join("");
+    }
+
+    async function submitExperience(moduleId) {
+      if (!authToken) return openAuthModal();
+      const text = document.getElementById(`exp_resp_${moduleId}`).value;
+      const res = await fetch(`${API_BASE}/experience/submit`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${authToken}` },
+        body: JSON.stringify({ module_id: moduleId, response_text: text })
+      });
+      const data = await res.json();
+      if (!res.ok) return alert(data.detail || "Error");
+      alert(`${data.status}: ${data.feedback}`);
+    }
+
+    function renderRolesIntelligence() {
+      document.getElementById("rolesIntelligenceGrid").innerHTML = rolesData.map(r => `
+        <div class="card" style="margin:0; background:var(--surface-alt);">
+          <h3>${r.title}</h3>
+          <p class="sub" style="margin-bottom:8px;">${r.description}</p>
+          <div class="sub"><b>Required Benchmarks:</b> ${Object.entries(r.required_skills).map(([k, v]) => `${k} (${v}%)`).join(", ")}</div>
+          <div class="sub" style="margin-top:6px;"><b>Tools:</b> ${r.tools.join(", ")}</div>
+          <button class="btn btn-outline btn-sm" style="margin-top:10px;" onclick="document.getElementById('roleSelect').value='${r.title}'; switchView('xray', document.querySelector('.nav-btn')); onRoleChange();">Compare My Skills</button>
+        </div>
+      `).join("");
+    }
+
+    async function sendChat() {
+      if (!authToken) return openAuthModal();
+      const input = document.getElementById("chatInput");
+      const msg = input.value.trim();
+      if (!msg) return;
+      input.value = "";
+
+      const log = document.getElementById("chatLog");
+      log.innerHTML += `<div style="margin-bottom:8px;"><b>You:</b> ${msg}</div>`;
+
+      const res = await fetch(`${API_BASE}/ai/chat`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${authToken}` },
+        body: JSON.stringify({
+          message: msg,
+          target_role: document.getElementById("roleSelect").value,
+          readiness_score: lastGapReport ? lastGapReport.job_readiness_score : 0,
+          top_gaps: lastGapReport ? lastGapReport.top_skills_gap.map(g => g.skill) : []
+        })
+      });
+      const data = await res.json();
+      log.innerHTML += `<div style="margin-bottom:10px; color:var(--primary);"><b>CareerX AI:</b> ${data.reply}</div>`;
+      log.scrollTop = log.scrollHeight;
+    }
+
+    function renderHistory(history) {
+      if (!history.length) return;
+      document.getElementById("historyList").innerHTML = history.slice(-5).reverse().map(h =>
+        `<div>• <b>${h.role_title}:</b> ${h.readiness_score}/100 (${new Date(h.recorded_at).toLocaleDateString()})</div>`
+      ).join("");
+
+      const ctx = document.getElementById("historyChart");
+      if (historyChartInstance) historyChartInstance.destroy();
+      historyChartInstance = new Chart(ctx, {
+        type: "line",
+        data: {
+          labels: history.map((_, i) => `Attempt ${i + 1}`),
+          datasets: [{ label: "Job Readiness Score", data: history.map(h => h.readiness_score), borderColor: "#0d9488", tension: 0.3 }]
+        },
+        options: { responsive: true, maintainAspectRatio: false, scales: { y: { beginAtZero: true, max: 100 } } }
+      });
+    }
+
+    async function loadAdminAnalytics() {
+      const res = await fetch(`${API_BASE}/admin/analytics`, {
+        headers: { Authorization: `Bearer ${authToken}` }
+      });
+      if (!res.ok) return;
+      const data = await res.json();
+      document.getElementById("adminMetrics").innerHTML = `
+        <div class="card" style="margin:0;"><div class="sub">Registered Students</div><div class="score-big">${data.total_registered_students}</div></div>
+        <div class="card" style="margin:0;"><div class="sub">Assessments Taken</div><div class="score-big">${data.total_assessments_taken}</div></div>
+        <div class="card" style="margin:0;"><div class="sub">Project Submissions</div><div class="score-big">${data.total_project_submissions}</div></div>
+      `;
+      document.getElementById("adminUsersTable").innerHTML = data.users.map(u =>
+        `<tr><td>${u.id}</td><td>${u.full_name}</td><td>${u.email}</td><td>${u.role}</td><td>${u.is_active ? "Active" : "Inactive"}</td></tr>`
+      ).join("");
+    }
+
+    initApp();
   </script>
 </body>
 </html>
