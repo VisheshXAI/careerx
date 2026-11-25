@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>CareerX — Skill &amp; Job Readiness Dashboard</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: system-ui, -apple-system, sans-serif; }
+    body {
+      background: #0b0f19;
+      color: #f1f5f9;
+      min-height: 100vh;
+      padding: 28px 18px;
+    }
+    .container { max-width: 960px; margin: 0 auto; }
+    .header {
+      display: flex; justify-content: space-between; align-items: center;
+      flex-wrap: wrap; gap: 12px; margin-bottom: 24px;
+    }
+    .brand { font-size: 26px; font-weight: 800; color: #38bdf8; }
+    .sub { color: #94a3b8; font-size: 14px; }
+
+    .grid { display: grid; grid-template-columns: 1fr 1.4fr; gap: 20px; }
+    @media (max-width: 780px) { .grid { grid-template-columns: 1fr; } }
+
+    .card {
+      background: rgba(30, 41, 59, 0.65);
+      border: 1px solid rgba(148, 163, 184, 0.2);
+      border-radius: 16px;
+      padding: 20px;
+      backdrop-filter: blur(10px);
+    }
+    .card h2 { font-size: 18px; margin-bottom: 14px; color: #e2e8f0; }
+
+    label { display: block; font-size: 13px; color: #cbd5e1; margin-bottom: 6px; }
+    select, input[type="number"] {
+      width: 100%; padding: 10px 12px; border-radius: 10px;
+      border: 1px solid #334155; background: #0f172a; color: #fff;
+      font-size: 14px; margin-bottom: 12px;
+    }
+    .skill-row {
+      display: grid; grid-template-columns: 1fr 90px; gap: 10px; align-items: center;
+      margin-bottom: 10px;
+    }
+    .skill-row label { margin: 0; }
+    .skill-row input { margin: 0; }
+
+    button {
+      width: 100%; margin-top: 14px; padding: 12px;
+      border: none; border-radius: 10px;
+      background: linear-gradient(90deg, #0284c7, #38bdf8);
+      color: #06101c; font-weight: 700; font-size: 15px;
+      cursor: pointer;
+    }
+    button:hover { opacity: 0.92; }
+
+    .score-box {
+      display: flex; align-items: center; justify-content: space-between;
+      background: #0f172a; border-radius: 12px; padding: 16px; margin-bottom: 16px;
+      border: 1px solid #1e293b;
+    }
+    .score-num { font-size: 36px; font-weight: 800; color: #38bdf8; }
+
+    .bar-wrap { margin-bottom: 14px; }
+    .bar-top { display: flex; justify-content: space-between; font-size: 13px; margin-bottom: 5px; gap: 8px; flex-wrap: wrap; }
+    .track { width: 100%; height: 10px; background: #0f172a; border-radius: 999px; overflow: hidden; }
+    .fill { height: 100%; background: #38bdf8; border-radius: 999px; transition: width 0.35s ease; }
+
+    .badge {
+      display: inline-block; padding: 4px 10px; border-radius: 999px;
+      font-size: 12px; font-weight: 600; margin-right: 6px; margin-top: 6px;
+      background: rgba(248, 113, 113, 0.15); color: #fca5a5; border: 1px solid rgba(248, 113, 113, 0.35);
+    }
+    .project-box {
+      margin-top: 14px; padding: 12px; border-radius: 10px;
+      background: rgba(56, 189, 248, 0.1); border: 1px solid rgba(56, 189, 248, 0.3);
+      font-size: 14px;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <div>
+        <div class="brand">CareerX</div>
+        <div class="sub">AI-Powered Employability &amp; Skill Intelligence Dashboard</div>
+      </div>
+      <div class="sub" id="apiStatusText">Connecting...</div>
+    </div>
+
+    <div class="grid">
+      <div class="card">
+        <h2>1. Apna Target &amp; Skill Score Daalo</h2>
+        <label for="roleSelect">Target Role</label>
+        <select id="roleSelect" onchange="renderSkillInputs()">
+          <option value="Data Analyst">Data Analyst</option>
+          <option value="AI/ML Engineer">AI/ML Engineer</option>
+        </select>
+
+        <div id="skillInputs"></div>
+
+        <button onclick="analyzeSkills()">Analyze Skill Gap</button>
+      </div>
+
+      <div class="card">
+        <h2>2. Career X-Ray Report</h2>
+
+        <div class="score-box">
+          <div>
+            <div class="sub">Job Readiness Score</div>
+            <div id="roleTitle" style="font-weight:700; margin-top:4px;">Data Analyst</div>
+          </div>
+          <div class="score-num" id="readinessScore">--/100</div>
+        </div>
+
+        <div id="barsContainer">
+          <div class="sub">"Analyze Skill Gap" dabao — yahan tumhara skill breakdown dikhega.</div>
+        </div>
+
+        <div style="margin-top: 14px;">
+          <div class="sub">Top Skill Gaps (Priority):</div>
+          <div id="gapsContainer"></div>
+        </div>
+
+        <div class="project-box" id="projectBox" style="display:none;"></div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const RENDER_BACKEND_URL = "https://careerx-backend-b406.onrender.com";
+
+    const API_BASE = RENDER_BACKEND_URL.trim().replace(/\/+$/, "");
+    document.getElementById("apiStatusText").innerText = "API: Live on Render";
+
+    const ROLE_SKILLS = {
+      "Data Analyst": { "Excel": 94, "Python": 81, "Stats": 67, "SQL": 48, "Power BI": 31 },
+      "AI/ML Engineer": { "Python": 80, "SQL": 65, "Machine Learning": 60, "Deep Learning": 45, "LLM / NLP": 50 }
+    };
+
+    function renderSkillInputs() {
+      const role = document.getElementById("roleSelect").value;
+      const skills = ROLE_SKILLS[role];
+      const container = document.getElementById("skillInputs");
+      container.innerHTML = "";
+
+      for (const [skill, defaultVal] of Object.entries(skills)) {
+        container.innerHTML += `
+          <div class="skill-row">
+            <label for="skill_${skill}">${skill} (0–100)</label>
+            <input type="number" id="skill_${skill}" min="0" max="100" value="${defaultVal}" />
+          </div>
+        `;
+      }
+    }
+
+    async function analyzeSkills() {
+      const role = document.getElementById("roleSelect").value;
+      const skills = ROLE_SKILLS[role];
+      const demonstrated = {};
+
+      for (const skill of Object.keys(skills)) {
+        const val = Number(document.getElementById(`skill_${skill}`).value || 0);
+        demonstrated[skill] = Math.max(0, Math.min(100, val));
+      }
+
+      try {
+        const res = await fetch(`${API_BASE}/analyze`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ target_role: role, demonstrated_skills: demonstrated })
+        });
+        const data = await res.json();
+        renderReport(data);
+      } catch (err) {
+        alert("Render backend abhi wake up ho raha hai ya connect nahi ho pa raha. 20-30 sec baad dobara dabao.");
+      }
+    }
+
+    function renderReport(data) {
+      document.getElementById("roleTitle").innerText = data.target_role;
+      document.getElementById("readinessScore").innerText = `${data.job_readiness_score}/100`;
+
+      const bars = document.getElementById("barsContainer");
+      bars.innerHTML = "";
+      data.skills.forEach(item => {
+        bars.innerHTML += `
+          <div class="bar-wrap">
+            <div class="bar-top">
+              <span><b>${item.skill}</b> — Tumhara: ${item.demonstrated}% | Required: ${item.required}%</span>
+              <span>Gap: ${item.gap}% (${item.status})</span>
+            </div>
+            <div class="track">
+              <div class="fill" style="width: ${item.demonstrated}%;"></div>
+            </div>
+          </div>
+        `;
+      });
+
+      const gaps = document.getElementById("gapsContainer");
+      gaps.innerHTML = data.top_skills_gap.length
+        ? data.top_skills_gap.map(g => `<span class="badge">${g.skill}: -${g.gap}% (${g.status})</span>`).join("")
+        : `<span class="sub">Koi major gap nahi hai!</span>`;
+
+      const proj = document.getElementById("projectBox");
+      proj.style.display = "block";
+      proj.innerHTML = `<b>Recommended Project:</b> ${data.recommended_project}`;
+    }
+
+    renderSkillInputs();
+    analyzeSkills();
+  </script>
+</body>
+</html>
